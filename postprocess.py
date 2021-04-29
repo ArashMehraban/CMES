@@ -94,9 +94,10 @@ def create_df(filenames_data, files_data, df_col_names, df_order, df_sort_by, df
 
 def plot_cost_err_seaborn(df, filename=None,nu=None,Ylim=None):
     df['Cost'] = df['Solve Time(s)'] * df['np']
-    df.drop(df.tail(1).index,inplace=True)
+    dff = df.copy(deep=True)
+    dff.drop(df.tail(1).index,inplace=True)
     grid = seaborn.relplot(
-        data=df,
+        data=dff,
         x='Cost',
         y='L2 Error',
         hue='deg',
@@ -114,12 +115,13 @@ def plot_cost_err_seaborn(df, filename=None,nu=None,Ylim=None):
     if filename:
         plt.savefig(filename)
     plt.show()
+    del df['Cost']
 
 def plot_time_err_seaborn(df, filename=None, nu= None, Ylim=None):
-    df.drop(df.tail(1).index,inplace=True)
-    #print(df.tail())
+    dff = df.copy(deep=True)
+    dff.drop(df.tail(1).index,inplace=True)
     grid = seaborn.relplot(
-        data=df,
+        data=dff,
         x='Solve Time(s)',
         y='L2 Error',
         hue='deg',
@@ -165,9 +167,10 @@ def draw_paper_data_tube(df,deg):
     mdf = df.drop(['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np'], axis=1)
     mdf = df.drop(['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np'], axis=1)
     tmp = mdf.groupby(['deg','#Refine'],as_index = False).first()
-    tmp_p = tmp.copy()
-    tmp_p['L2 Error'] = tmp_p['L2 Error'].apply(lambda x: '%.3e' % x)
-    print(tmp_p.to_latex())
+    tmp['Strain Energy'] = tmp['Strain Energy'].apply(lambda x: '%.4e' % x)
+    tmp['L2 Error'] = tmp['L2 Error'].apply(lambda x: '%.3e' % x)
+    
+    print(tmp.to_latex())
 
     ##NOTE: Hard Coded below (hd values come from MATLAB code):
     print("WARNING: Hard Coded for (element size h):")
@@ -180,7 +183,7 @@ def draw_paper_data_tube(df,deg):
           [0.0007  ,  0.0005  ,  0.0004 ,   0.0003], \
           [0.0007  ,  0.0005  ,  0.0004 ,   0.0003]]
 
-    tmp = tmp[:-1] 
+    tmp['L2 Error'] = tmp['L2 Error'].astype(float)
     if(deg == 4):
         err1 = tmp.where(tmp['deg']==1)['L2 Error'].dropna()
     err2 = tmp.where(tmp['deg']==2)['L2 Error'].dropna()
@@ -188,11 +191,11 @@ def draw_paper_data_tube(df,deg):
     err4 = tmp.where(tmp['deg']==4)['L2 Error'].dropna()
 
     if(deg == 4):
-        err = [err1,err2,err3,err4]
+        err = [err1,err2,err3,err4[:-1]]
     else:
-        err = [err2,err3,err4]
+        err = [err2,err3,err4[:-1]]
         hd = hd[1:]
-
+    
     convergence_rate = []   
     for i in range(len(hd)):
         s,bb = lin_reg_fit(np.log10(hd[i]), np.log10(err[i]))
@@ -399,7 +402,7 @@ if __name__ == "__main__":
     draw_paper_data_tube(df,4) #<---- 4 mean use poly orders 1,2,3 and 4
     #---------------------------------------------------------------------------------------------------
     
-
+    print('-------------------------------Incompressible-----------------------------------------------')
                                             #Incompressible Tube
     #---------------------------------------------------------------------------------------------------
     folder_name = 'log_files_tube_incomp'
@@ -418,6 +421,7 @@ if __name__ == "__main__":
     draw_paper_data_tube(df,3)  #<---- 3 mean use poly orders 2,3 and 4
     #---------------------------------------------------------------------------------------------------
 
+    print('-------------------------------Beam-----------------------------------------------')
 
                                                    #Beam
     #---------------------------------------------------------------------------------------------------
