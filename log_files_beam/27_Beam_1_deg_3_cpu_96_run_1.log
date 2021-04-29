@@ -1,0 +1,9 @@
+    Problem Name                       : Linear elasticity
+    Global nodes                       : 133931
+    Total KSP Iterations               : 108
+    SNES Solve Time                    : 0.546075 (0.54606) sec
+    DoFs/Sec in SNES                   : 79.4647 (79.4668) million
+    Strain Energy                      : 1.637132519106e-05
+Time (sec):           1.177e+00     1.011   1.174e+00
+Event                Count      Time (sec)     Flop                              --- Global ---  --- Stage ----  Total
+script run time: 2.795912007
