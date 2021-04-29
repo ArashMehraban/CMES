@@ -170,7 +170,7 @@ def draw_paper_data_tube(df,deg):
     tmp['Strain Energy'] = tmp['Strain Energy'].apply(lambda x: '%.4e' % x)
     tmp['L2 Error'] = tmp['L2 Error'].apply(lambda x: '%.3e' % x)
     
-    print(tmp.to_latex())
+    print(tmp.to_latex(index=False))
 
     ##NOTE: Hard Coded below (hd values come from MATLAB code):
     print("WARNING: Hard Coded for (element size h):")
@@ -211,7 +211,7 @@ def draw_paper_data_beam(df):
     mdf = df.drop(['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','Total Time(s)','np'], axis=1)
     mdf['Strain Energy'] = mdf['Strain Energy'].apply(lambda x: '%.6e' % x)
     mdf['L2 Error'] = mdf['L2 Error'].apply(lambda x: '%.3e' % x)
-    print(mdf.to_latex())
+    print(mdf.to_latex(index=False))
     return mdf
 
 def process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,full_disp):
