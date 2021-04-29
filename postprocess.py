@@ -399,8 +399,8 @@ if __name__ == "__main__":
     df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,full_disp)
     nu = 0.3
     ylim = [0.00001, 0.1]
-##    plot_cost_err_seaborn(df, 'error-cost-tube-comp.png',nu,ylim)
-##    plot_time_err_seaborn(df, 'error-time-tube-comp.png',nu,ylim)
+    plot_cost_err_seaborn(df, 'error-cost-tube-comp.png',nu,ylim)
+    plot_time_err_seaborn(df, 'error-time-tube-comp.png',nu,ylim)
     draw_paper_data_tube(df,4) #<---- 4 mean use poly orders 1,2,3 and 4
     #---------------------------------------------------------------------------------------------------
     
@@ -418,8 +418,8 @@ if __name__ == "__main__":
     df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,full_disp)
     nu = 0.499999
     ylim = [.6, 1]
-##    plot_cost_err_seaborn(df, 'error-cost-tube-incomp.png',nu,ylim)
-##    plot_time_err_seaborn(df, 'error-time-tube-incomp.png',nu,ylim)
+    plot_cost_err_seaborn(df, 'error-cost-tube-incomp.png',nu,ylim)
+    plot_time_err_seaborn(df, 'error-time-tube-incomp.png',nu,ylim)
     draw_paper_data_tube(df,3)  #<---- 3 mean use poly orders 2,3 and 4
     #---------------------------------------------------------------------------------------------------
 
