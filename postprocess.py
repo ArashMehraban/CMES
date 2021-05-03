@@ -210,7 +210,7 @@ def draw_paper_data_tube(df,pdf, drop_col_names):
 def sort_by(df, sortby):
     return df.sort_values([sortby], ascending = (True))
 
-def compute_error(df,refine,p):
+def compute_error(df,refine,p,roundFlag):
     #for p-refinement
     pdf = df.copy(deep=True)
     
@@ -223,57 +223,59 @@ def compute_error(df,refine,p):
         strain = df.where(df['deg']==p[i])['Strain Energy'].dropna()
         strain_sz = strain.size
         finest = strain.iloc[strain_sz-1]
-        print(finest)
         se_end = se_beg + strain_sz
         err_h[se_beg:se_end] = abs(strain - finest)/abs(finest)
         se_beg = se_end
-    df['L2 Error(h)'] = err_h
-    
+    df['L2 Error(h)'] = err_h   
 
     #p-refinement error
-    pdf = pdf.sort_values(['#Refine', 'deg', '#DoF', 'Strain Energy'], ascending = (True, True,True, True)).reset_index(drop=True)
+    pdf = pdf.sort_values(['#Refine','deg', '#DoF', 'Strain Energy'], ascending = (True, True,True, True)).reset_index(drop=True)
     pdf.index = pdf.index + 1
     err_p = np.zeros(numRows)
     se_beg = 0
+
+    pd.options.display.float_format = "{:,.15f}".format
     for i in range(len(refine)): #for each refinement do:
         strain = pdf.where(pdf['#Refine']==refine[i])['Strain Energy'].dropna()
         strain_sz = strain.size
         finest = strain.iloc[strain_sz-1]
         se_end = se_beg + strain_sz
-        err_p[se_beg:se_end] = abs(strain - finest)/abs(finest)
+        if(roundFlag):
+            err_p[se_beg:se_end] = abs(round(strain,7) - round(finest,7))/abs(round(finest,7))
+        else:
+            err_p[se_beg:se_end] = abs(strain - finest)/abs(finest)
         se_beg = se_end
     pdf['L2 Error(p)'] = err_p
 
-    #hp-refinement error
-    err_p_based_on_larget_hp = np.zeros(numRows)
-    strain_all = pdf['Strain Energy'].dropna().astype(np.float)
-    last = strain_all.iloc[numRows-1]
-    err_p_based_on_larget_hp = abs(strain_all - last )/abs(last)
-    pdf['L2 Error(hp)'] = err_p_based_on_larget_hp
-
+##    #hp-refinement error
+##    err_p_based_on_larget_hp = np.zeros(numRows)
+##    strain_all = pdf['Strain Energy'].dropna().astype(np.float)
+##    last = strain_all.iloc[numRows-1]
+##    err_p_based_on_larget_hp = abs(strain_all - last )/abs(last)
+##    pdf['L2 Error(hp)'] = err_p_based_on_larget_hp
     return df, pdf
     
 
-def draw_paper_data_beam(df, pdf, drop_col_names):
+def draw_paper_data(df, pdf, drop_col_names):
     hdf = df.drop(drop_col_names, axis=1)
     
-    hdf = hdf.groupby(['deg','#Refine'],as_index = False).first()
-
+    hdf = hdf.groupby(['deg', '#Refine'],as_index = False).first()
 
     hdf['L2 Error(h)'] = hdf['L2 Error(h)'].apply(lambda x: '%.4e' % x)
     hdf['Strain Energy'] = hdf['Strain Energy'].apply(lambda x: '%.6e' % x)
     print('L2 ERROR based on h-refinement:\n')
     print(hdf.to_latex(index=False))
 
+
+    pdf =pdf.groupby(['#Refine','deg'],as_index = False).first()
     pdf = pdf.drop(drop_col_names, axis=1)
     pdf['L2 Error(p)'] = pdf['L2 Error(p)'].apply(lambda x: '%.4e' % x)
     pdf['Strain Energy'] = pdf['Strain Energy'].apply(lambda x: '%.6e' % x)
-    print('L2 ERROR based on p and hp-refinement:\n')
-    pdf['L2 Error(hp)'] = pdf['L2 Error(hp)'].apply(lambda x: '%.4e' % x)
+    print('L2 ERROR based on p:\n')
+##    print('L2 ERROR based on p and hp-refinement:\n')
+##    pdf['L2 Error(hp)'] = pdf['L2 Error(hp)'].apply(lambda x: '%.4e' % x)
     print(pdf.to_latex(index=False))
-    
-    
-    
+
 
 def process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp):
     
@@ -444,34 +446,34 @@ if __name__ == "__main__":
     #number of repeats per simulation
     repeat = 3
 
-##    print('-------------------------------Compressible-----------------------------------------------')
-##
-##                                              #Compressible Tube 
-##    #---------------------------------------------------------------------------------------------------
-##    folder_name = 'log_files_tube_comp'
-##    #indecies to keep from filename
-##    #idx:    0   1    2  3  4  5  6  7  8 
-##    #     Tube8_20int_1_deg_3_cpu_1_run_1.log
-##    keep_idx = [2,4,8]  
-##    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
-##                        'Strain Energy', '.edu with','Time (sec):']
-##                                        #line containing .edu with has number of processors
-##    full_disp = True
-##    dof = 3
-##    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp)
-##    refine = [1,2,3,4,5]
-##    p = [1,2,3,4]
-##    df, pdf = compute_error(df,refine,p)
-##    print(df)
-##    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-##    draw_paper_data_beam(df,pdf, drop_col_names)
-##    h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
-##    nu = 0.3
-##    ylim = [0.00001, 0.1]
-##    #plot_cost_err_seaborn(df, 'error-cost-tube-comp.png',nu,ylim)
-##    #plot_time_err_seaborn(df, 'error-time-tube-comp.png',nu,ylim)
-##    #draw_paper_data_tube(df,4) #<---- 4 mean use poly orders 1,2,3 and 4
-##    #---------------------------------------------------------------------------------------------------
+    print('-------------------------------Compressible-----------------------------------------------')
+
+                                              #Compressible Tube 
+    #---------------------------------------------------------------------------------------------------
+    folder_name = 'log_files_tube_comp'
+    #indecies to keep from filename
+    #idx:    0   1    2  3  4  5  6  7  8 
+    #     Tube8_20int_1_deg_3_cpu_1_run_1.log
+    keep_idx = [2,4,8]  
+    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
+                        'Strain Energy', '.edu with','Time (sec):']
+                                        #line containing .edu with has number of processors
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp)
+    refine = [1,2,3,4,5]
+    p = [1,2,3,4]
+    roundFlag = True
+    df, pdf = compute_error(df,refine,p,roundFlag)
+    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
+    draw_paper_data(df,pdf, drop_col_names)
+    h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
+    nu = 0.3
+    ylim = [0.00001, 0.1]
+    #plot_cost_err_seaborn(df, 'error-cost-tube-comp.png',nu,ylim)
+    #plot_time_err_seaborn(df, 'error-time-tube-comp.png',nu,ylim)
+    #draw_paper_data_tube(df,4) #<---- 4 mean use poly orders 1,2,3 and 4
+    #---------------------------------------------------------------------------------------------------
     
     print('-------------------------------Incompressible-----------------------------------------------')
                                             #Incompressible Tube
@@ -486,13 +488,13 @@ if __name__ == "__main__":
     full_disp = True
     dof = 3
     df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat, dof, full_disp)
-    print(df)
     refine = [1,2,3,4,5]
     p = [2,3,4]
-    df, pdf = compute_error(df,refine,p)
-    print(df)
+    roundFlag = False
+    df, pdf = compute_error(df,refine,p,roundFlag)
+    #print(df)
     drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-    draw_paper_data_beam(df,pdf, drop_col_names)
+    draw_paper_data(df,pdf, drop_col_names)
     h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
     nu = 0.499999
     ylim = [0.00001, 0.1] #[.6, 1]
@@ -503,29 +505,30 @@ if __name__ == "__main__":
 
     print('-------------------------------Beam-----------------------------------------------')
 
-##                                                   #Beam
-##    #---------------------------------------------------------------------------------------------------
-##    folder_name = 'log_files_beam'
-##    filename_ext = '.log'
-##    #idx: 0   1   2  3  4  5  6   7  8 
-##    #     23_Beam_3_deg_2_cpu_64_run_3.log
-##    keep_idx = [2,4,6,8]
-##
-##    logfile_keywords = ['Global nodes','Total KSP Iterations', 'SNES Solve Time', \
-##                        'DoFs/Sec in SNES', 'Strain Energy', 'Time (sec):']
-##    full_disp = True
-##    dof = 3
-##    df = process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords, repeat, dof, full_disp)
-##    refine = [0,1,2,3,4]
-##    p = [1,2,3,4]
-##    df, pdf = compute_error(df,refine,p)
-##    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-##    draw_paper_data_beam(df,pdf, drop_col_names)
-##    h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
-####    h = [0.1428, 0.0714, 0.0476, 0.0357]
-####    print("slopes for beam with poly order 1-4 ")
-####    cs = compute_conv_slope(df,h)
-####    print(cs)
+                                                   #Beam
+    #---------------------------------------------------------------------------------------------------
+    folder_name = 'log_files_beam'
+    filename_ext = '.log'
+    #idx: 0   1   2  3  4  5  6   7  8 
+    #     23_Beam_3_deg_2_cpu_64_run_3.log
+    keep_idx = [2,4,6,8]
+
+    logfile_keywords = ['Global nodes','Total KSP Iterations', 'SNES Solve Time', \
+                        'DoFs/Sec in SNES', 'Strain Energy', 'Time (sec):']
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords, repeat, dof, full_disp)
+    refine = [0,1,2,3,4]
+    p = [1,2,3,4]
+    roundFlag = False
+    df, pdf = compute_error(df,refine,p,roundFlag)
+    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
+    draw_paper_data(df,pdf, drop_col_names)
+    h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
+##    h = [0.1428, 0.0714, 0.0476, 0.0357]
+##    print("slopes for beam with poly order 1-4 ")
+##    cs = compute_conv_slope(df,h)
+##    print(cs)
     
     #---------------------------------------------------------------------------------------------------
 
