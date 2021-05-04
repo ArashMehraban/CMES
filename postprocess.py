@@ -174,7 +174,6 @@ def plot_beam_p_conv(pdf, refine ,ps):
     for i in range(len(refine)):
         err = np.array(pdf.where(pdf['#Refine']==refine[i])['L2 Error(p)'].dropna() ,dtype=float)[:-1]
         sz_err = err.shape[0]
-        #ax.loglog(np.array(h[0:sz_err]), err)
         ax.semilogy(ps[0:sz_err],err,plt_linestyle[i], marker=plt_marker[i], label='Refinement {}'.format(i))
     plt.grid()
     ax.set_xticks((1,2,3))
@@ -184,7 +183,7 @@ def plot_beam_p_conv(pdf, refine ,ps):
     plt.ylabel(r'$L^2$ Error', rotation=90)
     plt.show()
 
-def plot_beam_h_conv(df, ps ,hs):
+def plot_beam_h_conv(df, ps ,hs, filename=None):
     convergence_rate =[]
     plt_marker = [ '*','o', '^', 'p']
     plt_linestyle = ['--g','-.r', ':b', '--k']
@@ -202,6 +201,8 @@ def plot_beam_h_conv(df, ps ,hs):
     plt.ylabel(r'$L^2$ Error', rotation=90)
     plt.grid()
     plt.show()
+    if filename:
+        plt.savefig(filename)
     print(convergence_rate)
 
 
@@ -604,7 +605,7 @@ if __name__ == "__main__":
     #plot_beam_p_conv(pdf, refine ,p)
 
     h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
-    plot_beam_h_conv(df, p ,h)
+    plot_beam_h_conv(df, p ,h, 'beam_err_h.png')
     
     #cs = compute_conv_slope(df,h)
     #print(cs)
