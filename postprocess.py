@@ -2,7 +2,6 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-##from collections import OrderedDict
 import matplotlib.pyplot as plt
 
 import seaborn
@@ -91,7 +90,6 @@ def create_df(filenames_data, files_data, df_col_names, df_order, df_sort_by, df
     dff["#DoF"] = dff["#DoF"].astype(int)
     dff["np"] = dff["np"].astype(int)
     dff['Solve Time(s)'] = dff['Solve Time(s)'].round(2)
-    #dff['Total Time(s)'] = dff['Total Time(s)'].round(2)
     dff['Petsc Time(s)'] = dff['Petsc Time(s)'].round(2)
     #dff['Strain Energy'] = dff['Strain Energy'].apply(lambda x: '%.2f' % x) <-- This change the type to string (Do NOT use!)
     return dff
@@ -144,27 +142,6 @@ def plot_time_err_seaborn(df, x=None, y=None, filename=None, nu= None, Ylim=None
         plt.savefig(filename)
     plt.show()
         
-##def draw_time_table(df):
-##    #filters:
-##    #p
-##    
-##    p1 = df['deg']==1
-##    p2 = df['deg']==2
-##    p3 = df['deg']==3
-##    p4 = df['deg']==4
-##    ps = [p1,p2,p3,p4]
-##    #alg 
-##    alg1 = df['Alg']==1
-##    alg2 = df['Alg']==2
-##    alg3 = df['Alg']==3
-##    alg4 = df['Alg']==4
-##    algs = [alg1,alg2,alg3,alg4]
-##    time = np.zeros((4,4))
-##
-##    for i in range(len(ps)):
-##        for j in range(len(algs)):
-##             time[i][j] = np.round(df.where((ps[i] & algs[j]))['Solve Time(s)'].dropna(), decimals = 2)
-##    print(time)
 
 def plot_beam_p_conv(pdf, refine ,ps):
     
@@ -204,51 +181,6 @@ def plot_beam_h_conv(df, ps ,hs, filename=None):
     if filename:
         plt.savefig(filename)
     print(convergence_rate)
-
-
-
-def draw_paper_data_tube(df,pdf, drop_col_names):
-    mdf = df.drop(['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np'], axis=1)
-    mdf = df.drop(['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np'], axis=1)
-    tmp = mdf.groupby(['deg','#Refine'],as_index = False).first()
-    tmp['Strain Energy'] = tmp['Strain Energy'].apply(lambda x: '%.4e' % x)
-    #tmp['L2 Error'] = tmp['L2 Error'].apply(lambda x: '%.3e' % x)    
-    print(tmp.to_latex(index=False))
-
-##    ##NOTE: Hard Coded below (hd values come from MATLAB code):
-##    print("WARNING: Hard Coded for (element size h):")
-##    print("This function will break if you change the data!!")
-##    print("FIX later")
-##    #refine 1        2          3         4        7          11      15         19
-##    #    0.0030    0.0020    0.0015    0.0012    0.0007    0.0005    0.0004    0.0003
-##    hd = [[0.0030 ,   0.0020 ,   0.0015  ,  0.0012],\
-##          [0.0030 ,   0.0020 ,   0.0015  ,  0.0012],\
-##          [0.0007  ,  0.0005  ,  0.0004 ,   0.0003], \
-##          [0.0007  ,  0.0005  ,  0.0004 ,   0.0003]]
-##
-##    tmp['L2 Error'] = tmp['L2 Error'].astype(float)
-##    if(deg == 4):
-##        err1 = tmp.where(tmp['deg']==1)['L2 Error'].dropna()
-##    err2 = tmp.where(tmp['deg']==2)['L2 Error'].dropna()
-##    err3 = tmp.where(tmp['deg']==3)['L2 Error'].dropna()
-##    err4 = tmp.where(tmp['deg']==4)['L2 Error'].dropna()
-##
-##    if(deg == 4):
-##        err = [err1,err2,err3,err4[:-1]]
-##    else:
-##        err = [err2,err3,err4[:-1]]
-##        hd = hd[1:]
-##    
-##    convergence_rate = []   
-##    for i in range(len(hd)):
-##        s,bb = lin_reg_fit(np.log10(hd[i]), np.log10(err[i]))
-##        convergence_rate.append(round(s, 2))
-##    print("Convergence rates:")
-##    print(convergence_rate)
-   
-
-def sort_by(df, sortby):
-    return df.sort_values([sortby], ascending = (True))
 
 def compute_error(df,refine,p,roundFlag):
     #for p-refinement
@@ -530,128 +462,128 @@ if __name__ == "__main__":
     repeat = 3
 
     
-##                                              #Compressible Tube 
-##    #---------------------------------------------------------------------------------------------------
-##    print('-------------------------------Compressible-----------------------------------------------')
-##    folder_name = 'log_files_tube_comp'
-##    #indecies to keep from filename
-##    #idx:    0   1    2  3  4  5  6  7  8 
-##    #     Tube8_20int_1_deg_3_cpu_1_run_1.log
-##    keep_idx = [2,4,8]  
-##    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
-##                        'Strain Energy', '.edu with','Time (sec):']
-##                                        #line containing .edu with has number of processors
-##    full_disp = True
-##    dof = 3
-##    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp)
-##
-##    refine = [1,2,3,4,5]
-##    p = [1,2,3,4]
-##    roundFlag = True
-##    df, pdf = compute_error(df,refine,p,roundFlag)
-##    
-##    nu = 0.3
-##    ylim = [0.0001, 0.1]
-##    #---Pareto diagrams where L2 error is computed based on h-refienemnt---#
-##    x='Cost'
-##    y='L2 Error(h)'
-##    plot_cost_err_seaborn(df, x,y, 'error-h-cost-tube-comp.png',nu,ylim)
-##    x='Solve Time(s)'
-##    y='L2 Error(h)'
-##    plot_time_err_seaborn(df, x, y, 'error-h-time-tube-comp.png',nu,ylim)
-##
-##    #---Pareto diagrams where L2 error is computed based on p-refienemnt---#
-##    x='Cost'
-##    y='L2 Error(p)'
-##    plot_cost_err_seaborn(pdf, x,y, 'error-p-cost-tube-comp.png',nu,ylim)
-##    x='Solve Time(s)'
-##    y='L2 Error(p)'
-##    plot_time_err_seaborn(pdf, x, y, 'error-p-time-tube-comp.png',nu,ylim)
-##
-##    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-##    draw_paper_data(df,pdf, drop_col_names)
-##    h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
-##    
-##    #draw_paper_data_tube(df,4) #<---- 4 mean use poly orders 1,2,3 and 4
-##    #---------------------------------------------------------------------------------------------------
-##    
-##    
-##                                            #Incompressible Tube
-##    #---------------------------------------------------------------------------------------------------
-##    print('-------------------------------Incompressible-----------------------------------------------')
-##    folder_name = 'log_files_tube_incomp'
-##    #indecies to keep from filename
-##    #idx:    0   1    2  3  4  5   6    7     8  9
-##    #     Tube8_20int_1_deg_3_cpu_384_incomp_run_2.log
-##    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
-##                        'Strain Energy', '.edu with','Time (sec):']
-##    keep_idx = [2,4,9]
-##    full_disp = True
-##    dof = 3
-##    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat, dof, full_disp)
-##
-##    refine = [1,2,3,4,5]
-##    p = [2,3,4]
-##    roundFlag = False
-##    df, pdf = compute_error(df,refine,p,roundFlag)
-##
-##    nu = 0.499999
-##    ylim = [.2, 1]
-##    #---Pareto diagrams where L2 error is computed based on h-refienemnt---#
-##    x='Cost'
-##    y='L2 Error(h)'
-##    plot_cost_err_seaborn(df, x,y, 'error-h-cost-tube-incomp.png',nu,ylim)
-##    x='Solve Time(s)'
-##    y='L2 Error(h)'
-##    plot_time_err_seaborn(df, x, y, 'error-h-time-tube-incomp.png',nu,ylim)
-##
-##    #---Pareto diagrams where L2 error is computed based on p-refienemnt---#
-##    x='Cost'
-##    y='L2 Error(p)'
-##    plot_cost_err_seaborn(pdf, x,y, 'error-p-cost-tube-incomp.png',nu,ylim)
-##    x='Solve Time(s)'
-##    y='L2 Error(p)'
-##    plot_time_err_seaborn(pdf, x, y, 'error-p-time-tube-incomp.png',nu,ylim)
-##    
-##    #print(df)
-##    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-##    draw_paper_data(df,pdf, drop_col_names)
-##    h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
-## 
-##    #draw_paper_data_tube(df,3)  #<---- 3 mean use poly orders 2,3 and 4
-##    #---------------------------------------------------------------------------------------------------
+                                              #Compressible Tube 
+    #---------------------------------------------------------------------------------------------------
+    print('-------------------------------Compressible-----------------------------------------------')
+    folder_name = 'log_files_tube_comp'
+    #indecies to keep from filename
+    #idx:    0   1    2  3  4  5  6  7  8 
+    #     Tube8_20int_1_deg_3_cpu_1_run_1.log
+    keep_idx = [2,4,8]  
+    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
+                        'Strain Energy', '.edu with','Time (sec):']
+                                        #line containing .edu with has number of processors
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp)
+
+    refine = [1,2,3,4,5]
+    p = [1,2,3,4]
+    roundFlag = True
+    df, pdf = compute_error(df,refine,p,roundFlag)
+    
+    nu = 0.3
+    ylim = [0.0001, 0.1]
+    #---Pareto diagrams where L2 error is computed based on h-refienemnt---#
+    x='Cost'
+    y='L2 Error(h)'
+    plot_cost_err_seaborn(df, x,y, 'error-h-cost-tube-comp.png',nu,ylim)
+    x='Solve Time(s)'
+    y='L2 Error(h)'
+    plot_time_err_seaborn(df, x, y, 'error-h-time-tube-comp.png',nu,ylim)
+
+    #---Pareto diagrams where L2 error is computed based on p-refienemnt---#
+    x='Cost'
+    y='L2 Error(p)'
+    plot_cost_err_seaborn(pdf, x,y, 'error-p-cost-tube-comp.png',nu,ylim)
+    x='Solve Time(s)'
+    y='L2 Error(p)'
+    plot_time_err_seaborn(pdf, x, y, 'error-p-time-tube-comp.png',nu,ylim)
+
+    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
+    draw_paper_data(df,pdf, drop_col_names)
+    h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
+    
+    #draw_paper_data_tube(df,4) #<---- 4 mean use poly orders 1,2,3 and 4
+    #---------------------------------------------------------------------------------------------------
+    
+    
+                                            #Incompressible Tube
+    #---------------------------------------------------------------------------------------------------
+    print('-------------------------------Incompressible-----------------------------------------------')
+    folder_name = 'log_files_tube_incomp'
+    #indecies to keep from filename
+    #idx:    0   1    2  3  4  5   6    7     8  9
+    #     Tube8_20int_1_deg_3_cpu_384_incomp_run_2.log
+    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
+                        'Strain Energy', '.edu with','Time (sec):']
+    keep_idx = [2,4,9]
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat, dof, full_disp)
+
+    refine = [1,2,3,4,5]
+    p = [2,3,4]
+    roundFlag = False
+    df, pdf = compute_error(df,refine,p,roundFlag)
+
+    nu = 0.499999
+    ylim = [.2, 1]
+    #---Pareto diagrams where L2 error is computed based on h-refienemnt---#
+    x='Cost'
+    y='L2 Error(h)'
+    plot_cost_err_seaborn(df, x,y, 'error-h-cost-tube-incomp.png',nu,ylim)
+    x='Solve Time(s)'
+    y='L2 Error(h)'
+    plot_time_err_seaborn(df, x, y, 'error-h-time-tube-incomp.png',nu,ylim)
+
+    #---Pareto diagrams where L2 error is computed based on p-refienemnt---#
+    x='Cost'
+    y='L2 Error(p)'
+    plot_cost_err_seaborn(pdf, x,y, 'error-p-cost-tube-incomp.png',nu,ylim)
+    x='Solve Time(s)'
+    y='L2 Error(p)'
+    plot_time_err_seaborn(pdf, x, y, 'error-p-time-tube-incomp.png',nu,ylim)
+    
+    #print(df)
+    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
+    draw_paper_data(df,pdf, drop_col_names)
+    h = [0.0030, 0.0020, 0.0015, 0.0012 ,0.0010]
+ 
+    #draw_paper_data_tube(df,3)  #<---- 3 mean use poly orders 2,3 and 4
+    #---------------------------------------------------------------------------------------------------
 
     
-##
-##                                                   #Beam
-##    #---------------------------------------------------------------------------------------------------
-##    print('-------------------------------Beam-----------------------------------------------')
-##    folder_name = 'log_files_beam'
-##    filename_ext = '.log'
-##    #idx: 0   1   2  3  4  5  6   7  8 
-##    #     23_Beam_3_deg_2_cpu_64_run_3.log
-##    keep_idx = [2,4,6,8]
-##
-##    logfile_keywords = ['Global nodes','Total KSP Iterations', 'SNES Solve Time', \
-##                        'DoFs/Sec in SNES', 'Strain Energy', 'Time (sec):']
-##    full_disp = True
-##    dof = 3
-##    df = process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords, repeat, dof, full_disp)
-##    refine = [0,1,2,3,4]
-##    p = [1,2,3,4]
-##    roundFlag = False
-##    df, pdf = compute_error(df,refine,p,roundFlag)
-##    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-##    draw_paper_data(df,pdf, drop_col_names)
-##
-##    print("slopes for beam with poly order 1-4 ")
-##    #plot_beam_p_conv(pdf, refine ,p)
-##
-##    h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
-##    plot_beam_h_conv(df, p ,h, 'beam_err_h.png')
-##    
-##    #cs = compute_conv_slope(df,h)
-##    #print(cs)
+
+                                                   #Beam
+    #---------------------------------------------------------------------------------------------------
+    print('-------------------------------Beam-----------------------------------------------')
+    folder_name = 'log_files_beam'
+    filename_ext = '.log'
+    #idx: 0   1   2  3  4  5  6   7  8 
+    #     23_Beam_3_deg_2_cpu_64_run_3.log
+    keep_idx = [2,4,6,8]
+
+    logfile_keywords = ['Global nodes','Total KSP Iterations', 'SNES Solve Time', \
+                        'DoFs/Sec in SNES', 'Strain Energy', 'Time (sec):']
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords, repeat, dof, full_disp)
+    refine = [0,1,2,3,4]
+    p = [1,2,3,4]
+    roundFlag = False
+    df, pdf = compute_error(df,refine,p,roundFlag)
+    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
+    draw_paper_data(df,pdf, drop_col_names)
+
+    print("slopes for beam with poly order 1-4 ")
+    #plot_beam_p_conv(pdf, refine ,p)
+
+    h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
+    plot_beam_h_conv(df, p ,h, 'beam_err_h.png')
+    
+    #cs = compute_conv_slope(df,h)
+    #print(cs)
     
     #---------------------------------------------------------------------------------------------------
 
