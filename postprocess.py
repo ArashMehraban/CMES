@@ -476,7 +476,50 @@ def compute_conv_slope(df,h):
         s,bb = lin_reg_fit(np.log10(h), np.log10(err))
         convergence_rate.append(round(s, 2))
     return convergence_rate
-        
+
+
+def plot_stong_scaling(df,p,title,filename=None):
+    fig, ax = plt.subplots()
+    plt_marker = [ '*','o', '^', 'p']
+    plt_linestyle = ['--g','-.r', ':b', '--k']
+    for i in range(len(p)):
+        mdof_s = np.array((df.where(df['deg']==p[i])['MDoFs/Sec'].dropna()))
+        solv_t = np.array(df.where(df['deg']==p[i])['Solve Time(s)'].dropna())
+        num_np = np.array(df.where(df['deg']==p[i])['np'].dropna())
+        y = mdof_s/num_np
+        x = solv_t
+        ax.plot(x,y,plt_linestyle[i], marker=plt_marker[i], label='p{}'.format(p[i]))
+    plt.title(title)
+    plt.legend(ncol = 2, loc="upper right", shadow=True)
+    plt.xlabel('Solve Time (s)')
+    plt.ylabel('(MDof/Sec) / (#Processors)', rotation=90)
+    #plt.grid()
+    if filename:
+        plt.savefig(filename)
+    plt.show()
+
+
+def plot_stong_scaling_np(df,p,title, xtick_vals, xticks_val_str, filename=None):
+    fig, ax = plt.subplots()
+    plt_marker = [ '*','o', '^', 'p']
+    plt_linestyle = ['--g','-.r', ':b', '--k']
+    for i in range(len(p)):
+        mdof_s = np.array((df.where(df['deg']==p[i])['MDoFs/Sec'].dropna()))
+        solv_t = np.array(df.where(df['deg']==p[i])['Solve Time(s)'].dropna())
+        num_np = np.array(df.where(df['deg']==p[i])['np'].dropna())
+        y = mdof_s/num_np
+        x = num_np
+        ax.semilogx(x,y,plt_linestyle[i], marker=plt_marker[i], label='p{}'.format(p[i])) #semilogx
+    plt.title(title)
+    plt.legend(ncol = 2, loc="upper right", shadow=True)
+    plt.xticks(xtick_vals,xticks_val_str)
+    plt.xlabel('#Processors')
+    plt.ylabel('(MDof/Sec) / (#Processors)', rotation=90)
+    plt.grid()
+    if filename:
+        plt.savefig(filename)
+    plt.show()
+    
      
 
 if __name__ == "__main__":
@@ -579,36 +622,36 @@ if __name__ == "__main__":
 ##    #---------------------------------------------------------------------------------------------------
 
     
-
-                                                   #Beam
-    #---------------------------------------------------------------------------------------------------
-    print('-------------------------------Beam-----------------------------------------------')
-    folder_name = 'log_files_beam'
-    filename_ext = '.log'
-    #idx: 0   1   2  3  4  5  6   7  8 
-    #     23_Beam_3_deg_2_cpu_64_run_3.log
-    keep_idx = [2,4,6,8]
-
-    logfile_keywords = ['Global nodes','Total KSP Iterations', 'SNES Solve Time', \
-                        'DoFs/Sec in SNES', 'Strain Energy', 'Time (sec):']
-    full_disp = True
-    dof = 3
-    df = process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords, repeat, dof, full_disp)
-    refine = [0,1,2,3,4]
-    p = [1,2,3,4]
-    roundFlag = False
-    df, pdf = compute_error(df,refine,p,roundFlag)
-    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
-    draw_paper_data(df,pdf, drop_col_names)
-
-    print("slopes for beam with poly order 1-4 ")
-    #plot_beam_p_conv(pdf, refine ,p)
-
-    h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
-    plot_beam_h_conv(df, p ,h, 'beam_err_h.png')
-    
-    #cs = compute_conv_slope(df,h)
-    #print(cs)
+##
+##                                                   #Beam
+##    #---------------------------------------------------------------------------------------------------
+##    print('-------------------------------Beam-----------------------------------------------')
+##    folder_name = 'log_files_beam'
+##    filename_ext = '.log'
+##    #idx: 0   1   2  3  4  5  6   7  8 
+##    #     23_Beam_3_deg_2_cpu_64_run_3.log
+##    keep_idx = [2,4,6,8]
+##
+##    logfile_keywords = ['Global nodes','Total KSP Iterations', 'SNES Solve Time', \
+##                        'DoFs/Sec in SNES', 'Strain Energy', 'Time (sec):']
+##    full_disp = True
+##    dof = 3
+##    df = process_log_files_linE_beam(folder_name, filename_ext, keep_idx, logfile_keywords, repeat, dof, full_disp)
+##    refine = [0,1,2,3,4]
+##    p = [1,2,3,4]
+##    roundFlag = False
+##    df, pdf = compute_error(df,refine,p,roundFlag)
+##    drop_col_names = ['#CG','MDoFs/Sec','Petsc Time(s)', 'Solve Time(s)','np']
+##    draw_paper_data(df,pdf, drop_col_names)
+##
+##    print("slopes for beam with poly order 1-4 ")
+##    #plot_beam_p_conv(pdf, refine ,p)
+##
+##    h = [0.1428, 0.0714, 0.0476 ,0.0357, 0.0286]
+##    plot_beam_h_conv(df, p ,h, 'beam_err_h.png')
+##    
+##    #cs = compute_conv_slope(df,h)
+##    #print(cs)
     
     #---------------------------------------------------------------------------------------------------
 
@@ -618,6 +661,48 @@ if __name__ == "__main__":
     
 
 
+                                              #Compressible Tube-scaling 
+    #---------------------------------------------------------------------------------------------------
+    print('-------------------------------Compressible-----------------------------------------------')
+    folder_name = 'scaling_log_files_comp'
+    #indecies to keep from filename
+    #idx:    0   1    2  3  4  5  6  7  8 
+    #     Tube8_20int_1_deg_3_cpu_1_run_1.log
+    keep_idx = [2,4,8]  
+    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
+                        'Strain Energy', '.edu with','Time (sec):']
+                                        #line containing .edu with has number of processors
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp)
+    p = [1,2,3,4]
+    title ='Throughput vs. Time (Compressible Tube Bend)'
+    plot_stong_scaling(df,p, title,'throughput-time-tube-comp')
+    title ='Throughput vs. #procs (Compressible Tube Bend)'
+    xtick_vals = [12,24,48,96,192,384,768]
+    xticks_val_str = ['12','24','48','96','192','384','768']
+    plot_stong_scaling_np(df,p,title, xtick_vals, xticks_val_str ,'throughput-np-tube-comp')
+##
+    print('-------------------------------Incompressible-----------------------------------------------')
+    folder_name = 'scaling_log_files_incomp'
+    #indecies to keep from filename
+    #idx:    0   1    2  3  4  5   6    7     8  9
+    #     Tube8_20int_1_deg_3_cpu_384_incomp_run_2.log
+    logfile_keywords = ['Global nodes', 'Total KSP Iterations', 'SNES Solve Time', 'DoFs/Sec in SNES', \
+                        'Strain Energy', '.edu with','Time (sec):']
+    keep_idx = [2,4,9]
+
+    full_disp = True
+    dof = 3
+    df = process_log_files_linE_tube(folder_name, filename_ext, keep_idx, logfile_keywords,repeat,dof, full_disp)
+    print(df)
+    p = [2,3,4]
+    title ='Throughput vs. Time (Incompressible Tube Bend)'
+    plot_stong_scaling(df,p, title, 'throughput-time-tube-incomp')
+    xtick_vals = [192,384,768,1536]
+    xticks_val_str = ['192','384','768','1536']
+    title ='Throughput vs. #np (Incompressible Tube Bend)'
+    plot_stong_scaling_np(df,p,title, xtick_vals, xticks_val_str,'throughput-np-tube-incomp')
     
 
     
